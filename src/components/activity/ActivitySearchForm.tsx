@@ -1,7 +1,8 @@
 import { Text, HStack, Box, Select, InputGroup, Input, InputRightElement, Heading } from '@chakra-ui/react';
 import { useReducer } from 'react';
-import { useRouter } from 'next/navigation';
 import { SearchIcon } from '@chakra-ui/icons';
+
+type OnChangeType = (a: string) => void;
 
 type Action =
   | { type: 'SET_REGION'; payload: string }
@@ -13,12 +14,6 @@ interface SearchState {
   startTime: string;
   keyword: string;
 }
-
-const initSearchState = {
-  region: '',
-  startTime: '',
-  keyword: '',
-};
 
 const searchReducer = (state: SearchState, action: Action): SearchState => {
   switch (action.type) {
@@ -33,16 +28,16 @@ const searchReducer = (state: SearchState, action: Action): SearchState => {
   }
 };
 
-const ActivitySearchForm = () => {
-  const router = useRouter();
+const ActivitySearchForm = ({ onChange, searchParams }: { onChange: OnChangeType; searchParams?: SearchState }) => {
+  let initSearchState = searchParams || { region: '', startTime: '', keyword: '' };
+
   const [searchForm, dispatch] = useReducer(searchReducer, initSearchState);
   const onChangeHandler = (type: 'SET_REGION' | 'SET_START_TIME' | 'SET_KEYWORD', value: string) =>
     dispatch({ type, payload: value });
 
   const redirectEventsResultPage = () => {
     const queryStr = new URLSearchParams({ ...searchForm }).toString();
-
-    router.push(`/activities?${queryStr}`);
+    onChange(queryStr);
   };
 
   return (

@@ -1,86 +1,55 @@
 'use client';
 
-import { Text, HStack, Box, Heading, Badge, Container, Stack, useRadioGroup, Grid } from '@chakra-ui/react';
-import { useState, useEffect } from 'react';
+import { Box, Heading, Container, Grid, Tabs, TabList, TabPanels, Tab, TabPanel } from '@chakra-ui/react';
 
-import { fetchEvents } from '@/api/index';
 import ActivityCard from '@/components/activity/ActivityCard';
-import RadioCard from '@/components/common/RadioCard';
 import { Activities } from '@/types/activityTypes';
-import Link from 'next/link';
 
-const ActivitySearchTemplate = () => {
-  const [result, setResult] = useState<Activities[]>([]);
-  const [sellsValue, setSellsValue] = useState<string>('1');
+type Content = {
+  id: string;
+  name: string;
+  result: Activities[];
+};
 
-  const sellsOptions = [
-    { id: '1', name: '今天', params: { startTime: '2023-05-04' } },
-    { id: '2', name: '明天', params: { startTime: '2023-05-05' } },
-    { id: '3', name: '未來一週', params: { startTime: '2023-05-04', endTime: '2023-05-11' } },
-  ];
-
-  const { getRootProps, getRadioProps } = useRadioGroup({
-    name: 'pickSellingType',
-    defaultValue: sellsValue,
-    onChange: (val: string) => {
-      setSellsValue(val);
-    },
-  });
-
-  const group = getRootProps();
-  const handleFetchEvents = async () => {
-    const data = await fetchEvents();
-    setResult(Array.isArray(data.mock) ? data.mock : []);
-  };
-  useEffect(() => {
-    handleFetchEvents();
-  }, []);
-
+const ActivitySearchTemplate = ({ title, tabs = [] }: { title: string; tabs: Content[] }) => {
   return (
     <Container maxW="1200px" py="80px">
       <Box as="section">
         <Heading as="h2" fontSize="28px" mb="32px">
-          近期開賣
+          {title}
         </Heading>
-
-        <HStack {...group} w="100%" mb="24px">
-          {sellsOptions.map((opt) => {
-            const radio = getRadioProps({ value: opt.id });
-            return (
-              <RadioCard key={opt.id} {...radio} isChecked>
-                {opt.name}
-              </RadioCard>
-            );
-          })}
-        </HStack>
-
-        <Grid templateColumns={{ base: '1fr', md: 'repeat(3, 1fr)' }} gap="30px" as="ul" alignItems="stretch">
-          {result.map((r: Activities) => (
-            <Box as="li" listStyleType="none" key={r.id}>
-              <Link href={`/activities/${r.id}`} scroll={true}>
-                <ActivityCard>
-                  <Stack py="3" align="flex-start">
-                    <Text size="20px" fontWeight="400">
-                      {r.created_at}
-                    </Text>
-                    <Heading size="3" fontWeight="700" color="brand.100" mb="12px">
-                      {r.name}
-                    </Heading>
-                    {r.status === 1 ? (
-                      <Badge py="6px" px="4" bgColor="#FFF1C1" borderRadius="20px">
-                        熱賣
-                      </Badge>
-                    ) : (
-                      <Badge py="6px" px="4" bgColor="#F7F2F0" borderRadius="20px">
-                        售罄
-                      </Badge>
-                    )}
-                  </Stack>
-                </ActivityCard>
-              </Link>
-            </Box>
-          ))}
-        </Grid>
+        <Tabs variant="unstyled">
+          <TabList mb="24px">
+            {tabs.map((opt) => {
+              return (
+                <Tab
+                  key={opt.id}
+                  borderWidth="1px"
+                  borderRadius="md"
+                  mr="8px"
+                  _selected={{ color: 'white', bg: 'brand.100' }}
+                >
+                  {opt.name}
+                </Tab>
+              );
+            })}
+          </TabList>
+          <TabPanels>
+            {tabs.map((tab) => {
+              return tab.result ? (
+                <TabPanel p="0">
+                  <Grid templateColumns={{ base: '1fr', md: 'repeat(3, 1fr)' }} gap="30px" as="ul" alignItems="stretch">
+                    {tab.result.map((r: Activities) => (
+                      <ActivityCard id={r.id} name={r.name} createAt={r.created_at} status={r.status as 0 | 1} />
+                    ))}
+                  </Grid>
+                </TabPanel>
+              ) : (
+                <></>
+              );
+            })}
+          </TabPanels>
+        </Tabs>
       </Box>
     </Container>
   );
