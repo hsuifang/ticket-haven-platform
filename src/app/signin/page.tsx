@@ -42,9 +42,21 @@ const Signin = () => {
       saveTokenToLS(token);
       router.push(previousPage);
     } catch (err) {
-      if (err instanceof AxiosError && err.response) {
+      if (err instanceof AxiosError) {
+        let message = '發生錯誤，請稍後再試';
+        switch(err.response?.data.status){
+          case '0002':
+            message = '帳號/密碼錯誤';
+            break;
+          case '0003':
+            message = '帳號不存在，請重新註冊';
+            router.push('/signup');
+            break;
+          default:
+            break;
+        }
+        alert(message);
         console.error(err);
-        alert(err.response.data.message);
       }
     }
   };
